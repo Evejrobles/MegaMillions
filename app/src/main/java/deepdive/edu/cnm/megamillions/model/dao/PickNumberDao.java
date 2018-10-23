@@ -13,7 +13,7 @@ import java.util.List;
 public interface PickNumberDao {
 
   @Insert(onConflict = OnConflictStrategy.FAIL)
-  List<Long> insert(PickNumber...numbers);
+  List<Long> insert(List<PickNumber> numbers);
 
   @Query("SELECT * FROM pick ORDER BY timestamp")
   List<Pick> select();

@@ -2,6 +2,7 @@ package deepdive.edu.cnm.megamillions.view;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +21,8 @@ public class PickAdapter extends RecyclerView.Adapter<PickAdapter.Holder> {
   private Context context;
   private List<int[]> picks;
 
+  // TODO Modify to take List
+
   public PickAdapter(Context context, List<int[]> picks) {
     this.context = context;
     this.picks = picks;
@@ -34,7 +37,7 @@ public class PickAdapter extends RecyclerView.Adapter<PickAdapter.Holder> {
 
   @Override
   public void onBindViewHolder(@NonNull Holder holder, int position) {
-    holder.bind();
+    holder.bind(); //TODO
     if (position % 2 == 1) {
       holder.itemView.setBackgroundColor(Color.argb(32, 0, 0, 0));
     }
@@ -63,6 +66,7 @@ public class PickAdapter extends RecyclerView.Adapter<PickAdapter.Holder> {
     }
 
     private void bind() {
+      //TODO
       int[] numbers = picks.get(getAdapterPosition());
       for (int i = 0; i < numbers.length; i++) {
         this.numbers[i].setText(Integer.toString(numbers[i]));
@@ -79,5 +83,5 @@ public class PickAdapter extends RecyclerView.Adapter<PickAdapter.Holder> {
     }
 
   }
-
+  //TODO Create delete task that takes a PickWithNumbers instance.
 }

@@ -1,5 +1,6 @@
 package deepdive.edu.cnm.megamillions.controller;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -11,6 +12,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import deepdive.edu.cnm.megamillions.R;
 import deepdive.edu.cnm.megamillions.model.db.PickDatabase;
+import deepdive.edu.cnm.megamillions.model.entity.Pick;
+import deepdive.edu.cnm.megamillions.model.entity.PickNumber;
+import deepdive.edu.cnm.megamillions.model.pojo.PickAndNumbers;
 import deepdive.edu.cnm.megamillions.view.PickAdapter;
 import edu.cnm.deepdive.Generator;
 import edu.cnm.deepdive.MMGenerator;
@@ -18,6 +22,7 @@ import edu.cnm.deepdive.MMGenerator;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -45,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton fab = findViewById(R.id.add_pick);
     fab.setOnClickListener((view) -> {
       int[] pick = generator.generate();
-      picks.add(pick);
-      adapter.notifyItemInserted(picks.size() - 1);
+      new AddTask().execute(pick);
     });
   }
 
@@ -74,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onStart() {
     super.onStart();
     database = PickDatabase.getInstance(this);
-    //TODO Run database query.
+   new QueryTask().execute();
   }
 
   @Override
@@ -83,4 +87,57 @@ public class MainActivity extends AppCompatActivity {
     PickDatabase.forgetInstance();
     super.onStop();
   }
+
+  private class QueryTask extends AsyncTask<Void, Void, List<PickAndNumbers>> {
+
+    @Override
+    protected void onPostExecute(List<PickAndNumbers> pickAndNumbers) {
+      //FIXME Assume less with data model.
+      picks.clear();
+      for(PickAndNumbers pick : pickAndNumbers) {
+        int[] numbers = new int[pick.getNumbers().size()];
+        int index = 0;
+        for (PickNumber number : pick.getNumbers()) {
+          numbers[index++] = number.getValue();
+        }
+        picks.add(numbers);
+      }
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected List<PickAndNumbers> doInBackground(Void... voids) {
+      return database.getPickDao().selectWithNumbers();
+    }
+
+  }
+
+  private class AddTask extends AsyncTask<int[], Void, int[]> {
+
+
+    @Override
+    protected void onPostExecute(int[] numbers) {
+      picks.add(numbers);
+      adapter.notifyItemInserted(picks.size() - 1);
+    }
+
+    @Override
+    protected int[] doInBackground(int[]... ints) {
+      int[] numbers = ints[0];
+      Pick pick = new Pick();
+      long pickId = database.getPickDao().insert(pick);
+      List<PickNumber> pickNumbers = new LinkedList<>();
+      for (int i = 0; i < numbers.length; i++) {
+        PickNumber pickNumber = new PickNumber();
+        pickNumber.setPickId(pickId);
+        pickNumber.setValue(numbers[i]);
+        pickNumber.setPool((i == numbers.length - 1) ? 1 : 0);
+        pickNumbers.add(pickNumber);
+      }
+      database.getPickNumberDao().insert(pickNumbers);
+      return numbers;
+    }
+
+  }
+
 }
